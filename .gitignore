@@ -1,0 +1,8 @@
+/target
+**/*.rs.bk
+.env
+kugelblitz.log
+kugelblitz.sqlite
+kugelblitz.markov
+.vscode
+sqlite3.lib

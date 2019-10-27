@@ -1,0 +1,4 @@
+newline_style = "Unix"
+remove_nested_parens = true
+reorder_imports = true
+reorder_modules = true

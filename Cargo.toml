@@ -1,0 +1,40 @@
+[package]
+name = "kugelblitz"
+version = "0.1.0"
+description = "A Discord bot written in Rust"
+authors = ["Kixiron <contact.kixiron@gmail.com>"]
+edition = "2018"
+readme = "README.md"
+license = "LICENSE"
+repository = ""
+keywords = ["discord", "bot"]
+categories = ["discord", "bot"]
+
+[dependencies]
+serenity = "0.6.3"
+hey_listen = "0.4.0"
+white_rabbit = "0.1.1"
+chrono = "0.4.7"
+dotenv = "0.14.1"
+log = "0.4.7"
+fern = "0.5.8"
+reqwest = "0.9.19"
+serde = "1.0.97"
+smallvec = "0.6.10"
+regex = "1.2.0"
+lazy_static = "1.3.0"
+base64 = "0.10.1"
+serde_json = "1.0.40"
+diesel = { version = "1.4.2", features = ["sqlite"] }
+markov = "1.0.2"
+color-backtrace = "0.2"
+
+[profile.release]
+opt-level = 3
+debug = false
+lto = true
+debug-assertions = false
+codegen-units = 1
+panic = 'unwind'
+incremental = false
+overflow-checks = false
