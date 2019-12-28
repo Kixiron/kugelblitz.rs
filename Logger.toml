@@ -1,0 +1,17 @@
+global_level = 'trace'
+
+### Optional: specify a regular expression to suppress all messages that don't match
+#global_pattern = 'foo'
+
+[modules]
+'serenity' = 'off'
+'mio' = 'off'
+'tungstenite' = 'off'
+'h2' = 'off'
+'tokio_reactor' = 'off'
+'want' = 'off'
+'rustls' = 'off'
+'sled' = 'off'
+'hyper' = 'off'
+'tokio_io' = 'off'
+'reqwest' = 'off'
