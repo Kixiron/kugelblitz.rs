@@ -1,6 +1,9 @@
 use crate::data;
-use log::{error, info};
-use serenity::{framework::standard::StandardFramework, model::id::UserId};
+use log::{error, info, warn};
+use serenity::{
+    framework::standard::{DispatchError, StandardFramework},
+    model::id::UserId,
+};
 
 mod command_prelude {
     pub use crate::commands::utils;
@@ -116,9 +119,59 @@ pub fn setup_framework(
                 );
             }
         })
-        .unrecognised_command(|_ctx, _msg, _unknown_command_name| {})
+        .unrecognised_command(|ctx, msg, unknown_command_name| {
+            if let Err(err) = msg.channel_id.say(
+                &ctx,
+                format!(
+                    "I'm sorry, but I don't have a command called '{}'",
+                    unknown_command_name
+                ),
+            ) {
+                error!(target: "Unrecognized Command", "{:?}", err);
+            }
+        })
+        .on_dispatch_error(|ctx, msg, error| match error {
+            DispatchError::CheckFailed(string, reason) => {}
+            DispatchError::CommandDisabled(name) => {
+                if let Err(err) = msg
+                    .channel_id
+                    .say(&ctx, format!("I'm sorry, but {} is disabled", name))
+                {
+                    error!("Message Send Error: {:?}", err);
+                }
+            }
+            DispatchError::BlockedUser
+            | DispatchError::BlockedGuild
+            | DispatchError::BlockedChannel => {}
+
+            DispatchError::OnlyForDM => {}
+            DispatchError::OnlyForGuilds => {}
+            DispatchError::OnlyForOwners => {}
+            DispatchError::LackingRole => {}
+            DispatchError::LackingPermissions(permissions) => {}
+            DispatchError::NotEnoughArguments { min, given } => {
+                if let Err(err) = msg.channel_id.say(
+                    &ctx,
+                    format!("Need {} arguments, but only got {}.", min, given),
+                ) {
+                    error!("Message Send Error: {:?}", err);
+                }
+            }
+            DispatchError::TooManyArguments { max, given } => {
+                if let Err(err) = msg.channel_id.say(
+                    &ctx,
+                    format!("Max arguments allowed is {}, but got {}.", max, given),
+                ) {
+                    error!("Message Send Error: {:?}", err);
+                }
+            }
+            DispatchError::Ratelimited(timeout) => {
+                warn!("Ratelimited for {} seconds", timeout);
+            }
+            DispatchError::IgnoredBot | DispatchError::WebhookAuthor => {}
+            err => error!("Unknown dispatch error: {:?}", err),
+        })
         .normal_message(|_ctx, _message| {})
-        .on_dispatch_error(|_ctx, _msg, _error| {})
         .help(&help::MY_HELP)
         .group(&general::GENERAL_GROUP)
         .group(&owner::OWNER_GROUP)

@@ -36,10 +36,9 @@ use status::*;
     idle,
     dnd,
     invisible,
-    logs,
-    blacklist,
-    unblacklist
+    logs
 )]
+#[sub_groups(Blacklist, Unblacklist)]
 pub struct Owner;
 
 // TODO: Upload latest log file, DM only

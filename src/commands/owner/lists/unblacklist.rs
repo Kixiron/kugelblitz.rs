@@ -1,14 +1,13 @@
 use crate::commands::command_prelude::*;
+use serenity::framework::standard::macros::group;
 use std::time::Instant;
 
-#[command]
-#[sub_commands(user, server)]
-pub fn unblacklist(_ctx: &mut Context, _msg: &Message) -> CommandResult {
-    Ok(())
-}
+#[group]
+#[commands(user, server)]
+pub struct Unblacklist;
 
 #[command]
-#[description = "Blacklist users"]
+#[description = "Unblacklist users"]
 #[usage = "{<User>}"]
 #[min_args(1)]
 pub fn user(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {

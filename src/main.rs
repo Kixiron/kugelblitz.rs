@@ -15,6 +15,9 @@ lazy_static::lazy_static! {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     logger::setup_logger()?;
 
+    #[cfg(not(debug_assertions))]
+    spawn_deadlock_detection()?;
+
     info!("Loading config...");
     let config = config::Config::load()?;
 
@@ -45,6 +48,36 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     info!("Starting {}...", bot_name);
     client.start_autosharded()?;
+
+    Ok(())
+}
+
+fn spawn_deadlock_detection() -> Result<(), Box<dyn std::error::Error>> {
+    use parking_lot::deadlock;
+    use std::{
+        thread::{self, Builder},
+        time::Duration,
+    };
+
+    Builder::new()
+        .name("deadlock-detection".into())
+        .spawn(move || loop {
+            let deadlocks = deadlock::check_deadlock();
+            if deadlocks.is_empty() {
+                continue;
+            }
+
+            error!("{} deadlocks detected", deadlocks.len());
+            for (i, threads) in deadlocks.iter().enumerate() {
+                error!("Deadlock #{}", i);
+                for t in threads {
+                    error!("Thread Id {:#?}", t.thread_id());
+                    error!("{:#?}", t.backtrace());
+                }
+            }
+
+            thread::sleep(Duration::from_secs(10));
+        })?;
 
     Ok(())
 }

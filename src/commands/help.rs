@@ -9,11 +9,12 @@ use std::collections::HashSet;
 
 #[help]
 #[command_not_found_text = "Could not find: `{}`."]
-#[max_levenshtein_distance(3)]
-#[indention_prefix = "+"]
+#[max_levenshtein_distance(10)]
 #[lacking_permissions = "Hide"]
 #[lacking_role = "Nothing"]
 #[wrong_channel = "Strike"]
+#[lacking_ownership = "Hide"]
+#[lacking_permissions = "Hide"]
 pub fn my_help(
     context: &mut Context,
     msg: &Message,
