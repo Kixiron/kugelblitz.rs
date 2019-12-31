@@ -2,36 +2,32 @@ use log::{error, info};
 use serenity::client::Client;
 
 mod commands;
+mod config;
 mod data;
 mod event_handler;
 mod logger;
 
+lazy_static::lazy_static! {
+    static ref OWNER_ID: std::sync::Arc<parking_lot::RwLock<u64>> =
+        std::sync::Arc::new(parking_lot::RwLock::new(0));
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    dotenv::dotenv()?;
     logger::setup_logger()?;
 
+    info!("Loading config...");
+    let config = config::Config::load()?;
+
     let mut client = {
-        use std::env;
-
-        let token = match env::var("DISCORD_TOKEN") {
-            Ok(token) => token,
-            Err(err) => {
-                error!("No discord token was supplied in the .env file!");
-                error!("Make sure the .env file exists next to the executable and contains the following line:");
-                error!("DISCORD_TOKEN=YOUR_DISCORD_TOKEN");
-                return Err(Box::new(err));
-            }
-        };
-
         info!("Validating discord token...");
-        serenity::client::validate_token(&token)?;
+        serenity::client::validate_token(&config.discord_token)?;
 
         info!("Creating discord client...");
-        Client::new(&token, event_handler::Handler)?
+        Client::new(&config.discord_token, event_handler::Handler)?
     };
 
     info!("Setting up internal data...");
-    data::setup_data(&mut client)?;
+    data::setup_data(&mut client, config)?;
 
     let (owners, bot_id, bot_name) = {
         let info = client.cache_and_http.http.get_current_application_info()?;
@@ -39,13 +35,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let mut owners = std::collections::HashSet::new();
         owners.insert(info.owner.id);
 
+        let mut owner_id = OWNER_ID.write();
+        *owner_id = *info.owner.id.as_u64();
+
         (owners, info.id, info.name)
     };
 
     client.with_framework(commands::setup_framework(owners, bot_id));
 
     info!("Starting {}...", bot_name);
-    client.start()?;
+    client.start_autosharded()?;
 
     Ok(())
 }

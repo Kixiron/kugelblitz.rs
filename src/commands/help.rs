@@ -22,6 +22,5 @@ pub fn my_help(
     groups: &[&'static CommandGroup],
     owners: HashSet<UserId>,
 ) -> CommandResult {
-    log::info!("{} asked for help", msg.author.tag());
     help_commands::with_embeds(context, msg, args, help_options, groups, owners)
 }

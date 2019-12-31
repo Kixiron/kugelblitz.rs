@@ -1,57 +1,44 @@
-use log::{error, warn};
-use serenity::{
-    client::{bridge::gateway::ShardId, Context},
-    framework::standard::{macros::command, CommandResult},
-    model::channel::Message,
-};
+use crate::commands::command_prelude::*;
 
 #[command]
 fn ping(ctx: &mut Context, msg: &Message) -> CommandResult {
     let data = ctx.data.read();
 
     let shard_manager = match data.get::<crate::data::ShardManagerContainer>() {
-        Some(v) => v,
+        Some(v) => Ok(v),
         None => {
-            error!("An attempt to lock the shard manager was made, but it failed");
-            if let Err(err) = msg.reply(&ctx, "There was a problem getting the shard manager") {
-                error!("Error sending message: {:?}", err);
-            }
+            msg.channel_id
+                .say(&ctx, "There was a problem getting the shard manager")?;
 
-            return Ok(());
+            Err(CommandError("Failed to get shard manager".to_string()))
         }
-    };
+    }?;
 
     let manager = shard_manager.lock();
     let runners = manager.runners.lock();
 
     let runner = match runners.get(&ShardId(ctx.shard_id)) {
-        Some(runner) => runner,
+        Some(runner) => Ok(runner),
         None => {
-            error!("An attempt to get the current shard was made, but it failed");
-            if let Err(err) = msg.reply(&ctx, "No shard found") {
-                error!("Error sending message: {:?}", err);
-            }
+            msg.channel_id.say(&ctx, "No shard found")?;
 
-            return Ok(());
+            Err(CommandError("Failed to get current shard".to_string()))
         }
-    };
+    }?;
 
     if let Some(latency) = runner.latency {
-        if let Err(err) = msg.reply(
+        msg.channel_id.say(
             &ctx,
             &format!(
                 "{}'s ping is {}ms",
                 ctx.cache.read().user.name,
                 latency.as_millis(),
             ),
-        ) {
-            error!("Error sending message: {:?}", err);
-        }
+        )?;
     } else {
         warn!("User attempted to get latency, but it was not available");
-        if let Err(err) = msg.reply(&ctx, "Unable to get latency, try again later") {
-            error!("Error sending message: {:?}", err);
-        }
+        msg.channel_id
+            .say(&ctx, "Unable to get latency, try again later")?;
     }
 
     Ok(())

@@ -1,5 +1,6 @@
 use super::data_prelude::*;
 use sled::Db;
+use std::convert::TryInto;
 
 pub struct DatabaseContainer;
 impl TypeMapKey for DatabaseContainer {
@@ -27,6 +28,19 @@ impl Database {
     ) -> Result<T, Box<dyn std::error::Error>> {
         let deserialized = bincode::deserialize(bytes)?;
         Ok(deserialized)
+    }
+
+    pub fn increment(old: Option<&[u8]>) -> Option<Vec<u8>> {
+        let number = match old {
+            Some(bytes) => {
+                let array: [u8; 8] = bytes.try_into().unwrap();
+                let number = u64::from_be_bytes(array);
+                number + 1
+            }
+            None => 0,
+        };
+
+        Some(number.to_be_bytes().to_vec())
     }
 }
 

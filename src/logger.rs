@@ -10,7 +10,6 @@ pub fn setup_logger() -> Result<(), Box<dyn std::error::Error>> {
         .check_parser_error()?
         .log_to_file()
         .directory("./data/logs")
-        .print_message()
         .rotate(
             // Create a new log file every day
             Criterion::Age(Age::Day),
@@ -73,7 +72,7 @@ fn format_message(record: &Record<'_>) -> String {
         Error => format!("{}", "✖"),
     };
 
-    let msg = format!("{}  {}", symbol, style(record.args()).underlined());
+    let msg = format!("{}  {}\n", symbol, style(record.args()).underlined());
     match record.level() {
         Trace | Debug | Info => format!("{}", style(msg).green()),
         Warn => format!("{}", style(msg).yellow()),
